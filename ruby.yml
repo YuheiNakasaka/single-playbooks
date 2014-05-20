@@ -1,0 +1,33 @@
+---
+- hosts: all
+  user: root
+  vars:
+    ruby_version: '2.1.2'
+  tasks:
+    - name: remove default ruby
+      yum: name=ruby state=removed
+
+    - name: install required package
+      yum: name=$item state=present
+      with_items:
+        - gcc
+        - zlib-devel
+        - openssl-devel
+        - sqlite
+        - sqlite-devel
+
+    - name: download source file
+      get_url: url=http://cache.ruby-lang.org/pub/ruby/2.1/ruby-{{ ruby_version }}.tar.gz  dest=/usr/local/src/ruby-{{ ruby_version }}.tar.gz
+
+    - name: Extract ruby file
+      command: tar -zxvf /usr/local/src/ruby-{{ ruby_version }}.tar.gz creates=/usr/local/src/ruby-{{ ruby_version }} chdir=/usr/local/src
+
+    - name: configure,make,make install
+      command: $item chdir=/usr/local/src/ruby-{{ ruby_version }}
+      with_items:
+        - ./configure
+        - make
+        - make install
+
+    - name: default link
+      command: ln -s /usr/local/bin/ruby /usr/bin/ruby      

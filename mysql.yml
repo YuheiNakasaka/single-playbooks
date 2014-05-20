@@ -1,0 +1,20 @@
+---
+- hosts: all
+  user: root
+  vars: 
+    mysql_port: 3306
+  handlers:
+    - name: restart iptables
+      service: name=iptables state=restarted
+  tasks:
+    - name: install mysql
+      yum: name=$item state=installed
+      with_items:
+        - mysql
+        - mysql-server
+        - mysql-devel
+
+    - name: insert iptables rule
+      lineinfile: dest=/etc/sysconfig/iptables state=present regexp="{{mysql_port}}"
+        insertafter="^:OUTPUT" line="-A INPUT -p tcp --dport {{mysql_port}} -j ACCEPT"
+      notify: restart iptables
