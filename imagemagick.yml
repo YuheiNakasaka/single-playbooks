@@ -1,0 +1,30 @@
+---
+- hosts: all
+  user: root
+  vars:
+    im_version: 6.8.9-1
+  tasks:
+    - name: Remove default imagemagick
+      yum: name=imagemagick state=removed
+
+    - name: install dependecies
+      yum: name=$item state=present
+      with_items:
+        - libjpeg-devel
+        - libpng-devel
+
+    - name: Get source 
+      get_url: url=ftp://ftp.kddlabs.co.jp/graphics/ImageMagick/ImageMagick-{{ im_version }}.tar.gz dest=/usr/local/src/ImageMagick-{{ im_version }}.tar.gz
+
+    - name: Extract source
+      command: tar xvzf /usr/local/src/ImageMagick-{{ im_version }}.tar.gz creates=/usr/local/src/ImageMagick-{{ im_version }} chdir=/usr/local/src
+
+    - name: configure,make, make install
+      command: $item chdir=/usr/local/src/ImageMagick-{{ im_version }}
+      with_items:
+        - ./configure
+        - make
+        - make install
+
+    - name: dynamic linker
+      command: ldconfig /usr/local/lib
